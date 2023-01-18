@@ -25,14 +25,14 @@ namespace SalonCS.Controllers
         public async Task<ActionResult<ServiceResponse<IEnumerable<WeatherForecast>>>> Get()
         {
 
-
-            return Ok(Enumerable.Range(1, 5).Select(index => new WeatherForecast
-            {
-                Date = DateTime.Now.AddDays(index),
-                TemperatureC = Random.Shared.Next(-20, 55),
-                Summary = Summaries[Random.Shared.Next(Summaries.Length)]
-            })
-            .ToArray());
+            throw new NotImplementedException();
+            //return Ok(Enumerable.Range(1, 5).Select(index => new WeatherForecast
+            //{
+            //    Date = DateTime.Now.AddDays(index),
+            //    TemperatureC = Random.Shared.Next(-20, 55),
+            //    Summary = Summaries[Random.Shared.Next(Summaries.Length)]
+            //})
+            //.ToArray());
         }
     }
 }
