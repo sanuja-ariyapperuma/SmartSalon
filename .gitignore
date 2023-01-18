@@ -1,0 +1,13 @@
+# Visual Studio cache/options directory
+SourceCode/.vs/
+
+#Build results
+SourceCode/SalonCS/bin/
+SourceCode/SalonCS/obj/
+
+#Client
+SourceCode/SalonCS/ClientApp/node_modules
+
+
+# NuGet Packages
+*.nupkg
