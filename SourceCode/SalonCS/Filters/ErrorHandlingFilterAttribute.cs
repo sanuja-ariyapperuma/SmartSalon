@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using SalonCS.DTO;
 using SalonCS.Model;
 
 namespace SalonCS.Filters

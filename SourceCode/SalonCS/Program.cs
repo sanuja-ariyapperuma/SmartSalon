@@ -1,17 +1,47 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
+using SalonCS.Data;
 using SalonCS.Filters;
+using SalonCS.IServices;
+using SalonCS.Services;
 using Serilog;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 
+// Add services to the container.
+//Password service should be registered before Db register since its refering the password service
+builder.Services.AddSingleton<IPasswordService, PasswordService>();
+
+builder.Services.AddDbContext<DataContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddControllersWithViews(Options => Options.Filters.Add<ErrorHandlingFilterAttribute>());
+
+builder.Services.AddTransient<IAuthenticationService,AuthenticationService>();
 
 var _logger = new LoggerConfiguration().ReadFrom.Configuration(builder.Configuration).Enrich.FromLogContext()
     .CreateLogger();
 
 builder.Logging.AddSerilog(_logger);
+builder.Services.AddEndpointsApiExplorer();
+
+var tokenKey = builder.Configuration.GetSection("LoginSecret:Token").Value;
+
+if (String.IsNullOrEmpty(tokenKey)) throw new Exception("Invalid token found");
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.Default.GetBytes(tokenKey)),
+            ValidateIssuer = false,
+            ValidateAudience = false,
+        };
+    });
 
 var app = builder.Build();
 
@@ -26,11 +56,17 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 
+app.UseAuthentication();
+
+app.UseAuthorization();
+
 
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller}/{action=Index}/{id?}");
 
-app.MapFallbackToFile("index.html"); ;
+app.MapFallbackToFile("index.html");
+
+
 
 app.Run();

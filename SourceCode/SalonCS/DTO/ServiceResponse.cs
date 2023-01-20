@@ -1,4 +1,4 @@
-﻿namespace SalonCS.Model
+﻿namespace SalonCS.DTO
 {
     public class ServiceResponse<T>
     {
