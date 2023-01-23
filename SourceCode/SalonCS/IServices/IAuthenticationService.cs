@@ -6,5 +6,7 @@ namespace SalonCS.IServices
     {
         public Task<string> Authenticate(UserCredentials usercred);
         public bool Register(UserCredentials usercred);
+
+        public bool ResetPassword(int id, string username, string password);
     }
 }

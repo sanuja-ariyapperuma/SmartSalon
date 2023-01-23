@@ -26,8 +26,11 @@ namespace SalonCS.Services
         {
             var user = await data.Users.Where(user => user.Username == usercred.Username && user.IsActive).FirstOrDefaultAsync();
 
+            //No user found
             if (user == null) return string.Empty;
-            if (String.IsNullOrEmpty(user.Password)) throw new Exception("No Password Found");
+
+            if (String.IsNullOrEmpty(user.Password) && user.IsInnitialLogin) return CreateToken(user,true);
+
             if (!_passwordService.VerifyPassword(usercred.Password, user.Password)) return string.Empty;
             
             return CreateToken(user);
@@ -38,12 +41,13 @@ namespace SalonCS.Services
             throw new NotImplementedException();
         }
 
-        private string CreateToken(User user)
+        private string CreateToken(User user,bool isInnitialLogin = false)
         {
             List<Claim> claims = new List<Claim> {
                 new Claim(ClaimTypes.Name,String.Concat(user.FirstName," ",user.LastName)),
                 new Claim(ClaimTypes.Role,user.UserRole.ToString()),
-                new Claim(ClaimTypes.UserData,user.Id.ToString())
+                new Claim(ClaimTypes.Sid,user.Id.ToString()),
+                new Claim(ClaimTypes.UserData,user.Username.ToString())
             };
 
             var tokenSecret = _configuration.GetSection("LoginSecret:Token").Value;
@@ -56,7 +60,7 @@ namespace SalonCS.Services
 
             var token = new JwtSecurityToken(
                 claims: claims,
-                expires: DateTime.Now.AddDays(1),
+                expires: isInnitialLogin ? DateTime.Now.AddMinutes(5) : DateTime.Now.AddDays(1),
                 signingCredentials: cred
                 );
 

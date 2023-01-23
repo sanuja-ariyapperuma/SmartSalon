@@ -1,7 +1,10 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SalonCS.DTO;
 using SalonCS.IServices;
+using System.Security.Claims;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 
 namespace SalonCS.Controllers
@@ -10,84 +13,48 @@ namespace SalonCS.Controllers
     [Route("[controller]")]
     public class AuthController : ControllerBase
     {
-        private IAuthenticationService _userservice { get; set; }
-        public AuthController(IAuthenticationService userservice)
+        private IAuthenticationService _authservice { get; set; }
+        public AuthController(IAuthenticationService authservice)
         {
-            _userservice = userservice;
+            _authservice = authservice;
         }
 
         [HttpPost("login")]
-        public async Task<ActionResult<ServiceResponse<bool>>> Login([FromBody] UserCredentials usercredentials)
+        public async Task<ActionResult<ServiceResponse<string>>> Login([FromBody] UserCredentials usercredentials)
         {
-            var response = ValidatePasswordOnLogin(usercredentials);
+            var response = new ServiceResponse<string>();
 
-            if (!response.Success) return Ok(response);
+            var jwt = await _authservice.Authenticate(usercredentials);
 
-            var jwt = await _userservice.Authenticate(usercredentials);
-
-            if (String.IsNullOrEmpty(jwt)) 
+            if (String.IsNullOrEmpty(jwt))
             {
                 response = new ServiceResponse<string> { Data = null, Message = "Username or password error", Success = false };
                 return Ok(response);
             }
-            
+
             response.Success = true;
             response.Data = jwt;
 
             return Ok(response);
         }
 
-        private ServiceResponse<string> ValidatePasswordOnRegister(UserCredentials usercredentials) 
+        [HttpPost("resetpassword")]
+        [Authorize]
+        public async Task<ActionResult<ServiceResponse<string>>> ResetPassword([FromBody] PasswordReset passwordreset) 
         {
-            var response = ValidatePasswordOnLogin(usercredentials);
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            if (identity != null)
+            {
+                string? jwtUsername =  identity.FindFirst("UserData") != null ? identity.FindFirst("UserData").Value : null ;
+                string? jwtId = identity.FindFirst("Sid") != null ? identity.FindFirst("Sid").Value : null;
 
-            response.Success = false;
+                if (jwtUsername == null || jwtId == null) throw new Exception("Invalid token found");
+                if (!passwordreset.Password.Equals(passwordreset.VerifyPassword)) return BadRequest("Password and Verify Passwords does not match");
 
-            if (usercredentials.Password.Length < 8)
-            {
-                response.Message = "Password should contain more than 8 characters";
-            }
-            else if (!(Regex.Match(usercredentials.Password,@"(?=.*\d)")).Success)
-            {
-                response.Message = "Password should contain atleast 1 digit";
-            }
-            else if (!(Regex.Match(usercredentials.Password, @"(?=.*[a-z])")).Success)
-            {
-                response.Message = "Password should contain atleast 1 lowercase character";
-            }
-            else if (!(Regex.Match(usercredentials.Password, @"(?=.*[A-Z])")).Success)
-            {
-                response.Message = "Password should contain atleast 1 uppercase character";
-            }
-            else 
-            {
-                response.Success = true;
-            }
+                //Should implement password reset db save service 
 
-            return response;
-        }
-        private ServiceResponse<string> ValidatePasswordOnLogin(UserCredentials usercredentials)
-        {
-            var response = new ServiceResponse<String>
-            {
-                Success = false,
-                Data = null
-            };
-
-            if (String.IsNullOrEmpty(usercredentials.Username))
-            {
-                response.Message = "Username cannot be empty";
             }
-            else if (String.IsNullOrEmpty(usercredentials.Password))
-            {
-                response.Message = "Password cannot be empty";
-            }
-            else
-            {
-                response.Success = true;
-            }           
-
-            return response;
+            throw new Exception("Empty userclaims found");
         }
 
     }
