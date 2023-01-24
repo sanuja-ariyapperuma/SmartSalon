@@ -68,7 +68,7 @@ namespace SalonCS.Controllers
                 if (jwtUsername == null || jwtId == null) throw new Exception("Invalid token found");
                 if (_passwordService.VerifyPassword(passwordreset.Password,passwordreset.VerifyPassword)) return BadRequest("Password and Verify Passwords does not match");
 
-                return Ok(_userService.ResetPassword(Convert.ToInt32(jwtId), passwordreset.Password));
+                return Ok( await _userService.ResetPassword(Convert.ToInt32(jwtId), passwordreset.Password));
             }
             throw new Exception("Empty userclaims found");
         }
