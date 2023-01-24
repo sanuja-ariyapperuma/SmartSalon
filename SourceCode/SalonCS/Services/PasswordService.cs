@@ -8,9 +8,17 @@ namespace SalonCS.Services
     public class PasswordService : IPasswordService
     {
         private readonly IConfiguration _configuration;
-        public PasswordService(IConfiguration configuration)
+        private readonly IRSAService _rsaService;
+        private readonly IUtilityService _utilityService;
+
+        public PasswordService(
+            IConfiguration configuration,
+            IRSAService rSAService,
+            IUtilityService utilityService)
         {
             _configuration = configuration;
+            _rsaService = rSAService;
+            _utilityService = utilityService;
         }
 
         public string GeneratePassword(string? password)
@@ -19,16 +27,19 @@ namespace SalonCS.Services
 
             using (var hmac = new HMACSHA512())
             {
-                hmac.Key = GetHashingSalt();
+                hmac.Key = _utilityService.GetHashingSalt();
                 var computedHash = hmac.ComputeHash(Encoding.Default.GetBytes(password));
 
                 return Convert.ToBase64String(computedHash);
             }
         }
 
-        public bool VerifyPassword(string requestPassword, string actualPassword)
+        public bool MatchPassword(string requestPassword, string actualPassword)
         {
-            using (var hmac = new HMACSHA512(GetHashingSalt()))
+            requestPassword = _rsaService.Decrypt(requestPassword);
+            actualPassword = _rsaService.Decrypt(actualPassword);
+
+            using (var hmac = new HMACSHA512(_utilityService.GetHashingSalt()))
             {
                 var requestComputedHash = hmac.ComputeHash(Encoding.Default.GetBytes(requestPassword));
                 var actualComputedHash = Convert.FromBase64String(actualPassword);
@@ -37,12 +48,11 @@ namespace SalonCS.Services
             }
         }
 
-        private byte[] GetHashingSalt() 
+        public bool VerifyPassword(string requestPassword, string actualPassword)
         {
-            var hashingSalt = _configuration.GetSection("LoginSecret:HashingSalt").Value;
-            if (hashingSalt == null) throw new Exception("Hashing salt couldn't found");
-
-            return Convert.FromBase64String(hashingSalt);
+            return _rsaService.Decrypt(requestPassword).Equals(_rsaService.Decrypt(actualPassword));
         }
+
+        
     }
 }

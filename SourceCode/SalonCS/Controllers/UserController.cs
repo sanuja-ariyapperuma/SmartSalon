@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SalonCS.Data;
 using SalonCS.DTO;
+using SalonCS.IServices;
 using SalonCS.Model;
 
 namespace SalonCS.Controllers
@@ -13,25 +14,21 @@ namespace SalonCS.Controllers
     [Authorize(Roles = nameof(UserRole.SuperAdmin))]
     public class UserController : ControllerBase
     {
-        private DataContext _dataContext;
+        private IUserService _userService;
 
-        public UserController(DataContext dataContext)
+        public UserController(
+            IUserService userService)
         {
-            _dataContext = dataContext;
+            _userService = userService;
         }
         [HttpPost("Register")]
-        public async Task<ActionResult<ServiceResponse<bool>>> Register([FromBody] User? registerUser) 
+        public async Task<ActionResult<ServiceResponse<bool>>> Register([FromBody] User registerUser) 
         {
-            
-            var isUsernameExists = await _dataContext.Users.Where(user => registerUser.Username == user.Username).CountAsync();
-            if (isUsernameExists > 0) return Ok(new ServiceResponse<string> { Data = null, Message="Username already exists", Success = false });
+            var isUsernameExists = await _userService.IsUsernameAlreadyExists(registerUser.Username);
 
-            registerUser.IsInnitialLogin = true;
-            registerUser.IsActive = true;
-            registerUser.Password = null;
+            if (isUsernameExists) return Ok(new ServiceResponse<string> { Data = null, Message="Username already exists", Success = false });
 
-            await _dataContext.Users.AddAsync(registerUser);
-            await _dataContext.SaveChangesAsync();
+            _userService.RegisterUser(registerUser);
 
             return Ok(true);
         }

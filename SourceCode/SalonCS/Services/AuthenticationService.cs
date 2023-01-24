@@ -6,6 +6,8 @@ using SalonCS.IServices;
 using SalonCS.Model;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace SalonCS.Services
 {
@@ -15,32 +17,45 @@ namespace SalonCS.Services
 
         private IPasswordService _passwordService;
         private IConfiguration _configuration;
+        private IRSAService _rsaService;
 
-        public AuthenticationService(DataContext dataContext,IPasswordService passwordService,IConfiguration configuration)
+        public AuthenticationService(
+            DataContext dataContext,
+            IPasswordService passwordService,
+            IConfiguration configuration,
+            IRSAService rSAService
+            )
         {
             data = dataContext;
             _passwordService = passwordService;
             _configuration = configuration;
+            _rsaService = rSAService;
         }
         public async Task<string> Authenticate(UserCredentials usercred)
         {
+            //Decrypt using RSA
+            usercred.Username = _rsaService.Decrypt(usercred.Username);
+            usercred.Password = _rsaService.Decrypt(usercred.Password);
+
+            //Get user
             var user = await data.Users.Where(user => user.Username == usercred.Username && user.IsActive).FirstOrDefaultAsync();
 
             //No user found
             if (user == null) return string.Empty;
-
+            
+            //Create token for fresh user (who doesnt have a password yet)
             if (String.IsNullOrEmpty(user.Password) && user.IsInnitialLogin) return CreateToken(user,true);
 
-            if (!_passwordService.VerifyPassword(usercred.Password, user.Password)) return string.Empty;
+            //Validate username and password
+            if (!_passwordService.MatchPassword(usercred.Password, user.Password)) return string.Empty;
             
+
             return CreateToken(user);
         }
-
         public bool Register(UserCredentials usercred)
         {
             throw new NotImplementedException();
         }
-
         private string CreateToken(User user,bool isInnitialLogin = false)
         {
             List<Claim> claims = new List<Claim> {
@@ -49,6 +64,7 @@ namespace SalonCS.Services
                 new Claim(ClaimTypes.Sid,user.Id.ToString()),
                 new Claim(ClaimTypes.UserData,user.Username.ToString())
             };
+
 
             var tokenSecret = _configuration.GetSection("LoginSecret:Token").Value;
 
@@ -68,5 +84,6 @@ namespace SalonCS.Services
 
             return jwt;
         }
+        
     }
 }

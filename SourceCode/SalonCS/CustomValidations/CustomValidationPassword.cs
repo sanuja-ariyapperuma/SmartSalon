@@ -7,11 +7,11 @@ namespace SalonCS.CustomValidations
     {
         protected override ValidationResult IsValid(object? value, ValidationContext validationContext)
         {
-            string password = value as string;
 
-            if (!string.IsNullOrEmpty(password))
+            if (value != null && !String.IsNullOrEmpty(value as string))
             {
-                
+                string password = value.ToString();
+
                 if (password.Length < 8)
                 {
                     return new ValidationResult("Password should be more than 8 characters");
@@ -29,7 +29,7 @@ namespace SalonCS.CustomValidations
                 }
 
             }
-
+            
             return ValidationResult.Success;
         }
     }

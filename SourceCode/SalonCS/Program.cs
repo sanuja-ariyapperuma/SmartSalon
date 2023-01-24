@@ -1,12 +1,14 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Abstractions;
 using Microsoft.IdentityModel.Tokens;
 using SalonCS.Data;
 using SalonCS.Filters;
 using SalonCS.IServices;
 using SalonCS.Services;
 using Serilog;
+using System.Security.Cryptography;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,6 +17,10 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 //Password service should be registered before Db register since its refering the password service
 builder.Services.AddSingleton<IPasswordService, PasswordService>();
+builder.Services.AddSingleton<IAsymmetricEncryption, AsymmetricEncryption>();
+builder.Services.AddSingleton<IRSAService, RSAService>();
+builder.Services.AddTransient<IUserService, UserService>();
+builder.Services.AddSingleton<IUtilityService,UtilityService>();
 
 builder.Services.AddDbContext<DataContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddControllersWithViews(Options => Options.Filters.Add<ErrorHandlingFilterAttribute>());
@@ -67,6 +73,17 @@ app.MapControllerRoute(
 
 app.MapFallbackToFile("index.html");
 
-
+CreateKeyPair();
 
 app.Run();
+
+void CreateKeyPair() 
+{
+    RSA rsa = RSA.Create(512);
+    
+    var publicKey = rsa.ToXmlString(false);
+    var privateKey = rsa.ToXmlString(true);
+
+    Environment.SetEnvironmentVariable("PublicKey", publicKey);
+    Environment.SetEnvironmentVariable("PrivateKey", privateKey);
+}
