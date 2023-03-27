@@ -1,0 +1,36 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33213.308
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SalonCS", "SalonCS\SalonCS.csproj", "{47C65192-892E-4BB0-8225-E53CC591883B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{FA49DA59-D8D8-4FEA-8E35-46F84B49348D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SalonCS.Tests", "SalonCS.Tests\SalonCS.Tests.csproj", "{10AF4890-5CDD-4D3F-82F0-9526972F6E1E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{47C65192-892E-4BB0-8225-E53CC591883B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{47C65192-892E-4BB0-8225-E53CC591883B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{47C65192-892E-4BB0-8225-E53CC591883B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{47C65192-892E-4BB0-8225-E53CC591883B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{10AF4890-5CDD-4D3F-82F0-9526972F6E1E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{10AF4890-5CDD-4D3F-82F0-9526972F6E1E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{10AF4890-5CDD-4D3F-82F0-9526972F6E1E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{10AF4890-5CDD-4D3F-82F0-9526972F6E1E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{10AF4890-5CDD-4D3F-82F0-9526972F6E1E} = {FA49DA59-D8D8-4FEA-8E35-46F84B49348D}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {8F42EBCD-82B7-408E-B401-2250F58CE9A2}
+	EndGlobalSection
+EndGlobal
